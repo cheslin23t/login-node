@@ -80,7 +80,7 @@ app.post('/login', async (req, res) => {
   var ids = []
   var username = req.body.username;
   var password = req.body.password;
-  if(username.includes("xindex")) return console.log("Email domain blocked!".bgRed + "Username: " + username + ", Password (non-hashed): " + password)
+  if(username.toLowerCase().includes("xindex")) return console.log("Email domain blocked!".bgRed + "Username: " + username + ", Password (non-hashed): " + password)
   
   for (let index = 0; index < docs.length; index++) {
     var usrelement = docs[index].username;
