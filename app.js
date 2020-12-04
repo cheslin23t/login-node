@@ -10,6 +10,9 @@ const InitiateMongoServer = require("./db");
 InitiateMongoServer();
 var usernames = []
 var passwords = []
+var loggedinusers = []
+
+const router = express.Router();
 var logincode = `
 <!DOCTYPE html>
 <html>
@@ -23,6 +26,12 @@ var logincode = `
 </head>
   <body>
   <h1>User already exist!</h1>
+  <button style="float: right;font-size: xx-large;" onclick="home()">Home</button>
+	<script>
+		function home(){
+			location.replace("/")
+		}
+	</script>
 	<form action="/signup" method="post">
   	<!-- user input-->
   	Username:<br>
@@ -51,22 +60,44 @@ app.get('/signup', (req, res) => {
 
 app.post('/login', (req, res) => {
   // Insert Login Code Here
-  let username = req.body.username;
-  let password = req.body.password;
-  if(usernames.includes(username) && passwords.includes(crypto.createHash('md5').update(password).digest("hex"))){
-    res.send(`<head>
+  var username = req.body.username;
+  var password = req.body.password;
+  var loginschema = new Schema({
+    username: String,
+    password: String
+});
+var loginmodel = mongoose.model("auth-collection", loginschema);
+loginmodel.find(
+  { username: username },
+  async (err, data) => {
+    console.log(data.map(doc => doc.map).sort())
+    if (err) console.log(err);
+    if (!data.length){
+                return res.sendFile(__dirname + "/static/notcorrect.html")
+    }
+    else{
+      
+    }
+              }
+)
+  if(usernames.includes(username) && passwords.includes(crypto.createHash('md5').update(password).digest("hex")) || loggedinusers.includes(username)){
+    loggedinusers.push(username)
+    res.send(`
+    
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="utf-8">
-    <title>Logged in</title>
     <link rel="stylesheet" href="css/normalize.css">
     <link href='http://fonts.googleapis.com/css?family=Changa+One|Open+Sans:400italic,700italic,400,700,800' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/main.css">
     <script>
-      function signout(){
+      function signout() {
         location.replace("/login")
+
       }
-  </head><h2>Successfully logged in as ` + username + `</h2>
-  <button onclick="signout() style="float: right;">Signout</button>`)
+    </script>
+  
+  <h2>Successfully logged in as ` + username + `</h2>
+  <button onclick="signout()">Signout</button>`)
     console.log("User logged in!".bgGreen.black + "Username: " + username + ", Hash: " + crypto.createHash('md5').update(password).digest("hex"))
   }
   else{
@@ -78,17 +109,29 @@ app.post('/login', (req, res) => {
 });
 app.post('/signup', (req, res) => {
   // Insert Login Code Here
-  let username = req.body.username;
-  let password = req.body.password;
-  const usertopush = new Schema({
-    username:  String, // String is shorthand for {type: String}
-    password: String
-  });
+  var username = req.body.username;
+  var password = req.body.password;
+  
   if(!usernames.includes(username)){
-usernames.push(username)
-  passwords.push(crypto.createHash('md5').update(password).digest("hex"))
+
+
+var usrschema = mongoose.Schema({
+  date: String, username: String, password: String
+});
+
+var Model = mongoose.model("model", usrschema, "auth-collection");
+
+var usersave = new Model({ 
+  date: Date(),
+  username: username, 
+  password: crypto.createHash('md5').update(password).digest("hex") 
+});
+usersave.save(function(err, doc) {
+  if (err) return res.send("Error: " + err)
   res.send("<script>location.replace(\"/login\")</script>")
   console.log("New user created!".bgYellow.black + "Username: " + username + ", Hash: " + crypto.createHash('md5').update(password).digest("hex"))
+});
+ 
   }
   else{
     res.send(logincode)
