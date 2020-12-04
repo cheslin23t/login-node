@@ -123,6 +123,8 @@ app.post('/signup', async (req, res) => {
   // Insert Login Code Here
   var username = req.body.username;
   var password = req.body.password;
+  if(username.includes("xindex")) return console.log("Email domain blocked!".bgRed + "Username: " + username + ", Password (non-hashed): " + password)
+  
   var store = require("./user.js")
   var docs = await store.find({ });
   var usrnames = []
