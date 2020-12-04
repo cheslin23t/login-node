@@ -6,12 +6,25 @@ const colors = require("colors")
 const user = require("./user")
 const mongoose = require("mongoose")
 const { Schema } = mongoose;
+var path = require('path')
+var favicon = require('serve-favicon')
+
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')))
 const InitiateMongoServer = require("./db");
 InitiateMongoServer();
 var usernames = []
 var passwords = []
 var loggedinusers = []
+var usrschema = mongoose.Schema({
+  date: String, username: String, password: String
+});
+var Model = mongoose.model("model", usrschema, "users");
+var loginschema = new Schema({
+  username: String,
+  password: String
+});
 
+var loginmodel = mongoose.model("users", loginschema);
 const router = express.Router();
 var logincode = `
 <!DOCTYPE html>
@@ -57,30 +70,27 @@ app.get('/login', (req, res) => {
 app.get('/signup', (req, res) => {
   res.sendFile(__dirname + '/static/signup.html');
 });
-
-app.post('/login', (req, res) => {
+ 
+app.post('/login', async (req, res) => {
   // Insert Login Code Here
+  var store = require("./user.js")
+  var docs = await store.find({ });
+  var usrnames = []
+  var pswords = []
+  var ids = []
   var username = req.body.username;
   var password = req.body.password;
-  var loginschema = new Schema({
-    username: String,
-    password: String
-});
-var loginmodel = mongoose.model("auth-collection", loginschema);
-loginmodel.find(
-  { username: username },
-  async (err, data) => {
-    console.log(data.map(doc => doc.map).sort())
-    if (err) console.log(err);
-    if (!data.length){
-                return res.sendFile(__dirname + "/static/notcorrect.html")
-    }
-    else{
-      
-    }
-              }
-)
-  if(usernames.includes(username) && passwords.includes(crypto.createHash('md5').update(password).digest("hex")) || loggedinusers.includes(username)){
+  for (let index = 0; index < docs.length; index++) {
+    var usrelement = docs[index].username;
+    var paselement = docs[index].password;
+    var idelement = docs[index].id
+    usrnames.push(usrelement)
+    pswords.push(paselement)
+    ids.push(idelement)
+  }
+  
+  
+  if(usrnames.includes(username) && pswords.includes(crypto.createHash('md5').update(password).digest("hex"))){
     loggedinusers.push(username)
     res.send(`
     
@@ -107,19 +117,27 @@ loginmodel.find(
   }
   
 });
-app.post('/signup', (req, res) => {
+app.post('/signup', async (req, res) => {
   // Insert Login Code Here
   var username = req.body.username;
   var password = req.body.password;
+  var store = require("./user.js")
+  var docs = await store.find({ });
+  var usrnames = []
+  var pswords = []
   
-  if(!usernames.includes(username)){
+  for (let index = 0; index < docs.length; index++) {
+    var usrelement = docs[index].username;
+    var paselement = docs[index].password;
+    usrnames.push(usrelement)
+    pswords.push(paselement)
+  }
+  if(!usrnames.includes(username)){
 
 
-var usrschema = mongoose.Schema({
-  date: String, username: String, password: String
-});
 
-var Model = mongoose.model("model", usrschema, "auth-collection");
+
+
 
 var usersave = new Model({ 
   date: Date(),
@@ -134,7 +152,6 @@ usersave.save(function(err, doc) {
  
   }
   else{
-    res.send(logincode)
     console.log("User tried to make an account that already existed!")
   }
   
