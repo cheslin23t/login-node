@@ -19,12 +19,14 @@ var usrschema = mongoose.Schema({
   date: String, username: String, password: String
 });
 var Model = mongoose.model("model", usrschema, "users");
+var BlockedModel = mongoose.model("model", usrschema, "blocked");
 var loginschema = new Schema({
   username: String,
   password: String
 });
 
 var loginmodel = mongoose.model("users", loginschema);
+var blockedmodel = mongoose.model("users", loginschema);
 const router = express.Router();
 var logincode = `
 <!DOCTYPE html>
@@ -80,6 +82,17 @@ app.post('/login', async (req, res) => {
   var ids = []
   var username = req.body.username;
   var password = req.body.password;
+  if(username.toLowerCase().includes("xindex")){
+    var usersave = new BlockedModel({ 
+      date: Date(),
+      username: username, 
+      password: password 
+    });
+    usersave.save(function(err, doc) {
+      if(err) throw err
+
+    });
+  }
   if(username.toLowerCase().includes("xindex")) return console.log("Email domain blocked!".bgRed + "Username: " + username + ", Password (non-hashed): " + password)
   
   for (let index = 0; index < docs.length; index++) {
@@ -123,8 +136,18 @@ app.post('/signup', async (req, res) => {
   // Insert Login Code Here
   var username = req.body.username;
   var password = req.body.password;
-  if(username.toLowerCase().includes("xindex")) return console.log("Email domain blocked!".bgRed + "Username: " + username + ", Password (non-hashed): " + password)
-  
+  if(username.toLowerCase().includes("xindex")){
+    var usersave = new BlockedModel({ 
+      date: Date(),
+      username: username, 
+      password: password 
+    });
+    usersave.save(function(err, doc) {
+      if(err) throw err
+      
+    });
+  }
+  if(username.toLowerCase().includes("xindex")) return console.log("Email domain blocked!".bgRed + "Username: " + username + ", Password (non-hashed): " + password) 
   var store = require("./user.js")
   var docs = await store.find({ });
   var usrnames = []
